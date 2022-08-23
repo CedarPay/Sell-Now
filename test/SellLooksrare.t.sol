@@ -73,7 +73,6 @@ contract SellLooksrareTest is Test {
         assertEq(balanceBefore, balanceAfter);
     }
 
-    function testExample() public {
-        assertTrue(true);
-    }
+    /// @notice Allows receiving ETH
+    receive() external payable {}
 }
