@@ -110,6 +110,27 @@ contract SellLooksrare {
         IERC721(_NFT).setApprovalForAll(_TRANSFER_MANAGER, true);
     }
 
+    function executeBuy(bytes memory data) external {
+        // Decode variables passed in data
+        OrderTypes.MakerOrder memory purchaseAsk = abi.decode(
+            data,
+            (OrderTypes.MakerOrder)
+        );
+
+        // Setup our taker bid to buy
+        OrderTypes.TakerOrder memory purchaseBid = OrderTypes.TakerOrder({
+            isOrderAsk: false,
+            taker: address(this),
+            price: purchaseAsk.price,
+            tokenId: purchaseAsk.tokenId,
+            minPercentageToAsk: purchaseAsk.minPercentageToAsk,
+            params: ""
+        });
+
+        // Accept maker ask order and purchase MAYC
+        LOOKSRARE.matchAskWithTakerBidUsingETHAndWETH(purchaseBid, purchaseAsk);
+    }
+
     function executeSell(bytes memory data) external {
         // Decode variables passed in data
         OrderTypes.MakerOrder memory saleBid = abi.decode(
@@ -122,7 +143,7 @@ contract SellLooksrare {
             isOrderAsk: true,
             taker: address(this),
             price: saleBid.price,
-            tokenId: saleBid.tokenId,
+            tokenId: saleBid.tokenId, // user's token id
             minPercentageToAsk: saleBid.minPercentageToAsk,
             params: ""
         });
