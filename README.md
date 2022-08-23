@@ -1,5 +1,5 @@
 ## Get Started
-```
+```bash
 # Build project
 forge build
 

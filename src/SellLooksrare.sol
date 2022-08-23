@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.13;
 
-// LooksRare order types
+// LooksRare order types, source: https://github.com/LooksRare/contracts-exchange-v1/blob/59ccb75c939c1dcafebda8cecedbda442131f0af/contracts/libraries/OrderTypes.sol
 library OrderTypes {
     struct MakerOrder {
         bool isOrderAsk; // true --> ask / false --> bid
@@ -112,17 +112,17 @@ contract SellLooksrare {
 
     function executeSell(bytes memory data) external {
         // Decode variables passed in data
-        (
-            OrderTypes.MakerOrder memory purchaseAsk,
-            OrderTypes.MakerOrder memory saleBid
-        ) = abi.decode(data, (OrderTypes.MakerOrder, OrderTypes.MakerOrder));
+        OrderTypes.MakerOrder memory saleBid = abi.decode(
+            data,
+            (OrderTypes.MakerOrder)
+        );
 
         // Setup our taker bid to sell
         OrderTypes.TakerOrder memory saleAsk = OrderTypes.TakerOrder({
             isOrderAsk: true,
             taker: address(this),
             price: saleBid.price,
-            tokenId: purchaseAsk.tokenId,
+            tokenId: saleBid.tokenId,
             minPercentageToAsk: saleBid.minPercentageToAsk,
             params: ""
         });

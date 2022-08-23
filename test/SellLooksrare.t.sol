@@ -73,6 +73,38 @@ contract SellLooksrareTest is Test {
         assertEq(balanceBefore, balanceAfter);
     }
 
+    /// @notice Test instant sell on looksrare
+    function testInstantSell() public {
+        // Enforce contract starts with 0 balance
+        vm.deal(address(LOOKSRARE), 0);
+
+        // Setup sale order
+        // Details from LooksRare API (https://looksrare.github.io/api-docs/#/Orders/OrderController.getOrders)
+        OrderTypes.MakerOrder memory sellOrder = OrderTypes.MakerOrder({
+        isOrderAsk: false,
+        signer: 0x562607a01a12E84a4aBE025Ac14ab1E36b76519f,
+        collection: 0x5Af0D9827E0c53E4799BB226655A1de152A425a5,
+        price: 330329999999999936,
+        tokenId: 0,
+        amount: 1,
+        strategy: 0x86F909F70813CdB1Bc733f4D97Dc6b03B8e7E8F3,
+        currency: 0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2,
+        nonce: 567078,
+        startTime: 1661229677,
+        endTime: 1661229977,
+        minPercentageToAsk: 8500,
+        params: "",
+        v: 28,
+        r: 0xa2d219129a0e8b8601c1dade4dc99f02415d33641639481c8ad71f2156ae3ea9,
+        s: 0x6c9d20e89e6c026ca17118d0224aba139a70246a402ec42b12ed235933908e0d
+        });
+        
+        // Calculate nftCost
+        uint256 nftCost = sellOrder.price;
+        // Transfer nftCosst + 2 wei to contract
+        payable(address(LOOKSRARE)).transfer(nftCost + 2 wei);
+        LOOKSRARE.executeSell(abi.encode(sellOrder));
+    }
     /// @notice Allows receiving ETH
     receive() external payable {}
 }
