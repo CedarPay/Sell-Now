@@ -1,0 +1,6 @@
+make --dry-run --always-make --keep-going --print-directory
+make: Entering directory `/Users/lixingyu/Desktop/cedar/sell-now'
+make: Leaving directory `/Users/lixingyu/Desktop/cedar/sell-now'
+ 
+make: *** No targets specified and no makefile found.  Stop.
+
