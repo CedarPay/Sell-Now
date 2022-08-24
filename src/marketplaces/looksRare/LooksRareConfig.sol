@@ -5,8 +5,8 @@ import { LooksRareTypeHashes } from "./lib/LooksRareTypeHashes.sol";
 import { OrderTypes } from "./lib/OrderTypes.sol";
 import { ILooksRareExchange } from "./interfaces/ILooksRareExchange.sol";
 import { ICurrencyManager } from "./interfaces/ICurrencyManager.sol";
-import { BaseMarketConfig } from "../../BaseMarketConfig.sol";
-import { TestCallParameters, TestOrderContext, TestOrderPayload, TestItem721, TestItem1155, TestItem20, SetupCall } from "../../Types.sol";
+import { BaseMarketConfig } from "../BaseMarketConfig.sol";
+import { TestCallParameters, TestOrderContext, TestOrderPayload, TestItem721, TestItem20, SetupCall } from "../Types.sol";
 
 contract LooksRareConfig is BaseMarketConfig, LooksRareTypeHashes {
     function name() external pure override returns (string memory) {

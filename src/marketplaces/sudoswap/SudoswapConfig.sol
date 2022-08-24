@@ -2,8 +2,8 @@ pragma solidity ^0.8.0;
 
 import "solmate/tokens/ERC20.sol";
 
-import { BaseMarketConfig } from "../../BaseMarketConfig.sol";
-import { SetupCall, TestCallParameters, TestOrderContext, TestOrderPayload, TestItem721, TestItem1155, TestItem20 } from "../../Types.sol";
+import { BaseMarketConfig } from "../BaseMarketConfig.sol";
+import { SetupCall, TestCallParameters, TestOrderContext, TestOrderPayload, TestItem721, TestItem20 } from "../Types.sol";
 import { IPair } from "./interfaces/IPair.sol";
 import { IRouter } from "./interfaces/IRouter.sol";
 import { IPairFactory } from "./interfaces/IPairFactory.sol";

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.8.7;
 
-import { SetupCall, TestOrderPayload, TestOrderContext, TestCallParameters, TestItem20, TestItem721, TestItem1155 } from "./Types.sol";
+import { SetupCall, TestOrderPayload, TestOrderContext, TestCallParameters, TestItem20, TestItem721 } from "./Types.sol";
 
 abstract contract BaseMarketConfig {
     /**

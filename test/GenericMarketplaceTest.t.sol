@@ -5,9 +5,9 @@ import { SeaportConfig } from "../src/marketplaces/seaport/SeaportConfig.sol";
 import { X2Y2Config } from "../src/marketplaces/X2Y2/X2Y2Config.sol";
 import { LooksRareConfig } from "../src/marketplaces/looksRare/LooksRareConfig.sol";
 import { SudoswapConfig } from "../src/marketplaces/sudoswap/SudoswapConfig.sol";
-import { BaseMarketConfig } from "../src/BaseMarketConfig.sol";
+import { BaseMarketConfig } from "../src/marketplaces/BaseMarketConfig.sol";
 
-import { SetupCall, TestOrderPayload, TestOrderContext, TestCallParameters, TestItem20, TestItem721, TestItem1155 } from "../src/Types.sol";
+import { SetupCall, TestOrderPayload, TestOrderContext, TestCallParameters, TestItem20, TestItem721 } from "../src/marketplaces/Types.sol";
 
 import "./tokens/TestERC20.sol";
 import "./tokens/TestERC721.sol";
@@ -50,7 +50,7 @@ contract GenericMarketplaceTest is BaseOrderTest {
     }
 
     function beforeAllPrepareMarketplaceTest(BaseMarketConfig config) internal {
-        // Get requested call from marketplace. Needed by Wyvern to deploy proxy
+        // Get requested call from marketplace
         SetupCall[] memory setupCalls = config.beforeAllPrepareMarketplaceCall(
             alice,
             bob,

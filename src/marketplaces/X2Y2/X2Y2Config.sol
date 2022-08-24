@@ -2,10 +2,10 @@
 pragma solidity ^0.8.0;
 
 import { IX2Y2Marketplace } from "./interfaces/IX2Y2Marketplace.sol";
-import { BaseMarketConfig } from "../../BaseMarketConfig.sol";
+import { BaseMarketConfig } from "../BaseMarketConfig.sol";
 import { Market } from "./interfaces/MarketConstants.sol";
 import { X2Y2TypeHashes } from "./lib/X2Y2TypeHashes.sol";
-import { SetupCall, TestCallParameters, TestOrderContext, TestOrderPayload, TestItem721, TestItem1155, TestItem20 } from "../../Types.sol";
+import { SetupCall, TestCallParameters, TestOrderContext, TestOrderPayload, TestItem721, TestItem20 } from "../Types.sol";
 
 contract X2Y2Config is BaseMarketConfig, X2Y2TypeHashes {
     IX2Y2Marketplace internal constant X2Y2 =
