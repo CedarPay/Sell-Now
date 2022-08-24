@@ -105,27 +105,35 @@ contract SellLooksrareTest is Test {
             isOrderAsk: false,
             signer: 0x562607a01a12E84a4aBE025Ac14ab1E36b76519f,
             collection: 0x5Af0D9827E0c53E4799BB226655A1de152A425a5,
-            price: 330660329999999936,
+            price: 330329999999999936,
             tokenId: 3215,
             amount: 1,
             strategy: 0x86F909F70813CdB1Bc733f4D97Dc6b03B8e7E8F3,
             currency: 0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2,
-            nonce: 568357,
-            startTime: 1661238519,
-            endTime: 1661238819,
+            nonce: 575787,
+            startTime: 1661289134,
+            endTime: 1661289434,
             minPercentageToAsk: 8500,
             params: "",
-            v: 27,
-            r: 0x0e53dda3ce27e5d7462d92a204bd321f6fe2f7ed38a7733037430e9d3ef29c70,
-            s: 0x1a2c8e270e25a3a7a5d6f107c6087c976e2cf4a65424e440aaa095f30c85a768
+            v: 28,
+            r: 0x3acce2ed14c02f93e6cf113d44da30f8a1edde68cb073a0a3256f3fa024b65ef,
+            s: 0x3c91793eb47ce7283c4e12e56dd3cf54c87529ec6616d10d459732ac8fdef7da
         });
 
         // Calculate nftCost
+        // Collect balance before
+        uint256 balanceBefore = address(this).balance;
+        // uint256 LOOKSRAREBefore = address(LOOKSRARE).balance;
         uint256 purchaseCost = purchaseOrder.price;
-        // Transfer nftCosst + 2 wei to contract
-        payable(address(LOOKSRARE)).transfer(purchaseCost + 2 wei);
+        // Transfer nftCosst to contract
+        payable(address(LOOKSRARE)).transfer(purchaseCost + 1 ether);
+        WETH.deposit{value: 10 ether}();
+        WETH.transferFrom(address(this), address(LOOKSRARE), 5 ether);
+        // assertEq(address(this).balance, balanceBefore - purchaseCost - 1 ether);
+        // assertEq(address(LOOKSRARE).balance, LOOKSRAREBefore + purchaseCost + 1 ether);
         LOOKSRARE.executeBuy(abi.encode(purchaseOrder));
-        LOOKSRARE.executeSell(abi.encode(sellOrder));
+        // LOOKSRARE.executeSell(abi.encode(sellOrder));
+
     }
 
     /// @notice Allows receiving ETH
