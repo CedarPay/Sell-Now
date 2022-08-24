@@ -66,7 +66,7 @@ interface IERC721 {
     ) external;
 }
 
-// LooksRare exchange
+// LooksRare exchange, source: https://github.com/LooksRare/contracts-exchange-v1/blob/59ccb75c939c1dcafebda8cecedbda442131f0af/contracts/LooksRareExchange.sol
 interface ILooksRareExchange {
     /// @notice Match a taker ask with maker bid
     function matchBidWithTakerAsk(
