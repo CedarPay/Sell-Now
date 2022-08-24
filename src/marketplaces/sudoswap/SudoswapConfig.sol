@@ -133,6 +133,7 @@ contract SudoswapConfig is BaseMarketConfig {
         );
     }
 
+    /// @dev Buy ERC721 using ETH
     function getPayload_BuyOfferedERC721WithEther(
         TestOrderContext calldata context,
         TestItem721 memory nft,
@@ -175,58 +176,7 @@ contract SudoswapConfig is BaseMarketConfig {
         });
     }
 
-    function getPayload_BuyOfferedERC721WithERC20(
-        TestOrderContext calldata context,
-        TestItem721 calldata nft,
-        TestItem20 calldata erc20
-    ) external override returns (TestOrderPayload memory execution) {
-        if (
-            !context.listOnChain ||
-            nft.token != erc721Address ||
-            erc20.token != erc20Address ||
-            erc20.amount != NFT_PRICE
-        ) _notImplemented();
-
-        // update market address so tests know where the ERC721 will be escrowed
-        currentMarket = address(erc20NftPool);
-
-        // construct submitOrder payload
-        // offerer transfers ERC721 to erc20NftPool
-        execution.submitOrder = TestCallParameters({
-            target: nft.token,
-            value: 0,
-            data: abi.encodeWithSignature(
-                "safeTransferFrom(address,address,uint256)",
-                context.offerer,
-                address(erc20NftPool),
-                nft.identifier
-            )
-        });
-
-        // construct executeOrder payload
-        // fulfiller calls router
-        uint256[] memory nftIds = new uint256[](1);
-        nftIds[0] = nft.identifier;
-
-        IRouter.PairSwapSpecific[]
-            memory swapList = new IRouter.PairSwapSpecific[](1);
-        swapList[0] = IRouter.PairSwapSpecific({
-            pair: address(erc20NftPool),
-            nftIds: nftIds
-        });
-        execution.executeOrder = TestCallParameters({
-            target: address(ROUTER),
-            value: 0,
-            data: abi.encodeWithSelector(
-                IRouter.swapERC20ForSpecificNFTs.selector,
-                swapList,
-                erc20.amount,
-                context.fulfiller,
-                type(uint256).max
-            )
-        });
-    }
-
+    /// @dev Sell ERC721 in ERC20
     function getPayload_BuyOfferedERC20WithERC721(
         TestOrderContext calldata context,
         TestItem20 calldata erc20,
@@ -278,6 +228,7 @@ contract SudoswapConfig is BaseMarketConfig {
         });
     }
 
+    /// @dev Buy multiple ERC721s using ETH
     function getPayload_BuyOfferedManyERC721WithEther(
         TestOrderContext calldata context,
         TestItem721[] calldata nfts,
@@ -320,65 +271,6 @@ contract SudoswapConfig is BaseMarketConfig {
                 context.fulfiller,
                 false,
                 address(0)
-            )
-        });
-    }
-
-    function getPayload_BuyOfferedManyERC721WithEtherDistinctOrders(
-        TestOrderContext[] calldata contexts,
-        TestItem721[] calldata nfts,
-        uint256[] calldata ethAmounts
-    ) external view override returns (TestOrderPayload memory execution) {
-        if (!contexts[0].listOnChain) _notImplemented();
-
-        address[] memory pools = new address[](nfts.length);
-        uint256[] memory ids = new uint256[](nfts.length);
-
-        for (uint256 i = 0; i < nfts.length; i++) {
-            pools[i] = address(ethNftPoolsForDistinct[i]);
-            ids[i] = nfts[i].identifier;
-        }
-
-        execution.submitOrder = TestCallParameters({
-            target: address(ROUTER),
-            value: 0,
-            data: abi.encodeWithSignature(
-                "depositNFTs(address,uint256[],address[])",
-                nfts[0].token,
-                ids,
-                pools
-            )
-        });
-
-        // construct executeOrder payload
-        // fulfiller calls router
-
-        IRouter.PairSwapSpecific[]
-            memory swapList = new IRouter.PairSwapSpecific[](nfts.length);
-
-        for (uint256 i = 0; i < nfts.length; i++) {
-            uint256[] memory singleId = new uint256[](1);
-            singleId[0] = nfts[i].identifier;
-            swapList[i] = IRouter.PairSwapSpecific({
-                pair: address(ethNftPoolsForDistinct[i]),
-                nftIds: singleId
-            });
-        }
-
-        uint256 totalEthAmount = 0;
-        for (uint256 i = 0; i < ethAmounts.length; i++) {
-            totalEthAmount += ethAmounts[i];
-        }
-
-        execution.executeOrder = TestCallParameters({
-            target: address(ROUTER),
-            value: totalEthAmount,
-            data: abi.encodeWithSelector(
-                IRouter.swapETHForSpecificNFTs.selector,
-                swapList,
-                contexts[0].offerer,
-                contexts[0].fulfiller,
-                type(uint256).max
             )
         });
     }

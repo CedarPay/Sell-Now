@@ -60,73 +60,6 @@ contract X2Y2Config is BaseMarketConfig, X2Y2TypeHashes {
         return setupCalls;
     }
 
-    function encodeFillOrderDistinctOrders(
-        TestOrderContext[] calldata contexts,
-        TestItem721[] memory nfts,
-        uint256[] memory prices,
-        address currency,
-        uint256 intent
-    ) internal view returns (bytes memory payload, uint256 ethSum) {
-        Market.RunInput memory input;
-
-        input.shared.user = contexts[0].fulfiller;
-        input.shared.deadline = block.timestamp + 1;
-
-        Market.Order[] memory orders = new Market.Order[](nfts.length);
-        Market.SettleDetail[] memory details = new Market.SettleDetail[](
-            nfts.length
-        );
-
-        for (uint256 i = 0; i < nfts.length; i++) {
-            {
-                ethSum += prices[i];
-            }
-            {
-                orders[i].user = contexts[i].offerer;
-                orders[i].network = 1;
-                orders[i].intent = intent;
-                orders[i].delegateType = 1;
-                orders[i].deadline = block.timestamp + 1;
-                orders[i].currency = currency;
-
-                Market.OrderItem[] memory items = new Market.OrderItem[](1);
-
-                Market.Pair[] memory itemPairs = new Market.Pair[](1);
-                itemPairs[0] = Market.Pair(nfts[i].token, nfts[i].identifier);
-
-                items[0] = Market.OrderItem(prices[i], abi.encode(itemPairs));
-
-                orders[i].items = items;
-
-                (orders[i].v, orders[i].r, orders[i].s) = _sign(
-                    contexts[i].offerer,
-                    _deriveOrderDigest(orders[i])
-                );
-                orders[i].signVersion = Market.SIGN_V1;
-            }
-            {
-                details[i].op = intent == Market.INTENT_SELL
-                    ? Market.Op.COMPLETE_SELL_OFFER
-                    : Market.Op.COMPLETE_BUY_OFFER;
-                details[i].orderIdx = i;
-                details[i].itemIdx = 0;
-                details[i].price = prices[i];
-                details[i].itemHash = _hashItem(orders[i], orders[i].items[0]);
-                details[i].executionDelegate = erc721Delegate;
-            }
-        }
-
-        input.orders = orders;
-        input.details = details;
-
-        (input.v, input.r, input.s) = _sign(
-            X2Y2Signer,
-            _deriveInputDigest(input)
-        );
-
-        payload = abi.encodeWithSelector(IX2Y2Marketplace.run.selector, input);
-    }
-
     function encodeFillOrder(
         address offerer,
         address fulfiller,
@@ -189,6 +122,7 @@ contract X2Y2Config is BaseMarketConfig, X2Y2TypeHashes {
         return abi.encodeWithSelector(IX2Y2Marketplace.run.selector, input);
     }
 
+    /// @dev Buy ERC721 using ETH
     function getPayload_BuyOfferedERC721WithEther(
         TestOrderContext calldata context,
         TestItem721 calldata nft,
@@ -220,33 +154,7 @@ contract X2Y2Config is BaseMarketConfig, X2Y2TypeHashes {
         );
     }
 
-    function getPayload_BuyOfferedERC721WithERC20(
-        TestOrderContext calldata context,
-        TestItem721 calldata nft,
-        TestItem20 calldata erc20
-    ) external view override returns (TestOrderPayload memory execution) {
-        if (context.listOnChain) {
-            _notImplemented();
-        }
-
-        TestItem721[] memory nfts = new TestItem721[](1);
-        nfts[0] = nft;
-
-        Market.Fee[] memory fees = new Market.Fee[](0);
-
-        bytes memory payload = encodeFillOrder(
-            context.offerer,
-            context.fulfiller,
-            nfts,
-            erc20.amount,
-            erc20.token,
-            Market.INTENT_SELL,
-            fees
-        );
-
-        execution.executeOrder = TestCallParameters(address(X2Y2), 0, payload);
-    }
-
+    /// @dev Sell ERC721 in ERC20
     function getPayload_BuyOfferedERC20WithERC721(
         TestOrderContext calldata context,
         TestItem20 calldata erc20,
@@ -274,90 +182,7 @@ contract X2Y2Config is BaseMarketConfig, X2Y2TypeHashes {
         execution.executeOrder = TestCallParameters(address(X2Y2), 0, payload);
     }
 
-    function getPayload_BuyOfferedERC721WithEtherOneFeeRecipient(
-        TestOrderContext calldata context,
-        TestItem721 memory nft,
-        uint256 priceEthAmount,
-        address feeRecipient,
-        uint256 feeEthAmount
-    ) external view override returns (TestOrderPayload memory execution) {
-        if (context.listOnChain) {
-            _notImplemented();
-        }
-
-        TestItem721[] memory nfts = new TestItem721[](1);
-        nfts[0] = nft;
-
-        Market.Fee[] memory fees = new Market.Fee[](1);
-        fees[0] = Market.Fee(
-            (feeEthAmount * 1000000) / (priceEthAmount + feeEthAmount) + 1,
-            feeRecipient
-        );
-
-        bytes memory payload = encodeFillOrder(
-            context.offerer,
-            context.fulfiller,
-            nfts,
-            priceEthAmount + feeEthAmount,
-            address(0),
-            Market.INTENT_SELL,
-            fees
-        );
-
-        execution.executeOrder = TestCallParameters(
-            address(X2Y2),
-            priceEthAmount + feeEthAmount,
-            payload
-        );
-    }
-
-    function getPayload_BuyOfferedERC721WithEtherTwoFeeRecipient(
-        TestOrderContext calldata context,
-        TestItem721 memory nft,
-        uint256 priceEthAmount,
-        address feeRecipient1,
-        uint256 feeEthAmount1,
-        address feeRecipient2,
-        uint256 feeEthAmount2
-    ) external view override returns (TestOrderPayload memory execution) {
-        if (context.listOnChain) {
-            _notImplemented();
-        }
-
-        TestItem721[] memory nfts = new TestItem721[](1);
-        nfts[0] = nft;
-
-        Market.Fee[] memory fees = new Market.Fee[](2);
-        fees[0] = Market.Fee(
-            (feeEthAmount1 * 1000000) /
-                (priceEthAmount + feeEthAmount1 + feeEthAmount2) +
-                1,
-            feeRecipient1
-        );
-        fees[1] = Market.Fee(
-            (feeEthAmount2 * 1000000) /
-                (priceEthAmount + feeEthAmount1 + feeEthAmount2) +
-                1,
-            feeRecipient2
-        );
-
-        bytes memory payload = encodeFillOrder(
-            context.offerer,
-            context.fulfiller,
-            nfts,
-            priceEthAmount + feeEthAmount1 + feeEthAmount2,
-            address(0),
-            Market.INTENT_SELL,
-            fees
-        );
-
-        execution.executeOrder = TestCallParameters(
-            address(X2Y2),
-            priceEthAmount + feeEthAmount1 + feeEthAmount2,
-            payload
-        );
-    }
-
+    /// @dev Buy multiple ERC721s using ETH
     function getPayload_BuyOfferedManyERC721WithEther(
         TestOrderContext calldata context,
         TestItem721[] calldata nfts,
@@ -384,50 +209,5 @@ contract X2Y2Config is BaseMarketConfig, X2Y2TypeHashes {
             ethAmount,
             payload
         );
-    }
-
-    function getPayload_BuyOfferedManyERC721WithEtherDistinctOrders(
-        TestOrderContext[] calldata contexts,
-        TestItem721[] calldata nfts,
-        uint256[] calldata ethAmounts
-    ) external view override returns (TestOrderPayload memory execution) {
-        if (contexts[0].listOnChain) {
-            _notImplemented();
-        }
-
-        (bytes memory payload, uint256 ethSum) = encodeFillOrderDistinctOrders(
-            contexts,
-            nfts,
-            ethAmounts,
-            address(0),
-            Market.INTENT_SELL
-        );
-
-        execution.executeOrder = TestCallParameters(
-            address(X2Y2),
-            ethSum,
-            payload
-        );
-    }
-
-    function getPayload_BuyOfferedManyERC721WithErc20DistinctOrders(
-        TestOrderContext[] calldata contexts,
-        address erc20Address,
-        TestItem721[] calldata nfts,
-        uint256[] calldata erc20Amounts
-    ) external view override returns (TestOrderPayload memory execution) {
-        if (contexts[0].listOnChain) {
-            _notImplemented();
-        }
-
-        (bytes memory payload, ) = encodeFillOrderDistinctOrders(
-            contexts,
-            nfts,
-            erc20Amounts,
-            erc20Address,
-            Market.INTENT_SELL
-        );
-
-        execution.executeOrder = TestCallParameters(address(X2Y2), 0, payload);
     }
 }

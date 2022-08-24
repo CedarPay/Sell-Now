@@ -71,6 +71,7 @@ contract GenericMarketplaceTest is BaseOrderTest {
                         Tests
     //////////////////////////////////////////////////////////////*/
  
+    /// @dev Sell ERC721 in ERC20
     function BuyOfferedERC20WithERC721_ListOnChain(
         BaseMarketConfig config
     ) internal prepareTest(config) {
@@ -114,6 +115,7 @@ contract GenericMarketplaceTest is BaseOrderTest {
         }
     }
 
+    /// @dev Sell ERC721 in ERC20
     function BuyOfferedERC20WithERC721(BaseMarketConfig config)
         internal
         prepareTest(config)

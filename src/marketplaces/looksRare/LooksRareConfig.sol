@@ -135,6 +135,7 @@ contract LooksRareConfig is BaseMarketConfig, LooksRareTypeHashes {
                         Test Payload Calls
     //////////////////////////////////////////////////////////////*/
 
+    /// @dev Buy ERC721 using ETH
     function getPayload_BuyOfferedERC721WithEther(
         TestOrderContext calldata context,
         TestItem721 memory nft,
@@ -168,107 +169,7 @@ contract LooksRareConfig is BaseMarketConfig, LooksRareTypeHashes {
         );
     }
 
-    function getPayload_BuyOfferedERC1155WithEther(
-        TestOrderContext calldata context,
-        TestItem1155 calldata nft,
-        uint256 ethAmount
-    ) external view override returns (TestOrderPayload memory execution) {
-        OrderTypes.MakerOrder memory makerOrder = buildMakerOrder(
-            true,
-            context.offerer,
-            WETH,
-            ethAmount,
-            nft.token,
-            nft.amount,
-            nft.identifier
-        );
-        OrderTypes.TakerOrder memory takerOrder = buildTakerOrder(
-            context.fulfiller,
-            makerOrder
-        );
-
-        if (context.listOnChain) {
-            _notImplemented();
-        }
-        execution.executeOrder = TestCallParameters(
-            address(looksRare),
-            ethAmount,
-            abi.encodeWithSelector(
-                ILooksRareExchange.matchAskWithTakerBidUsingETHAndWETH.selector,
-                takerOrder,
-                makerOrder
-            )
-        );
-    }
-
-    function getPayload_BuyOfferedERC721WithERC20(
-        TestOrderContext calldata context,
-        TestItem721 calldata nft,
-        TestItem20 calldata erc20
-    ) external view override returns (TestOrderPayload memory execution) {
-        OrderTypes.MakerOrder memory makerOrder = buildMakerOrder(
-            true,
-            context.offerer,
-            erc20.token,
-            erc20.amount,
-            nft.token,
-            1,
-            nft.identifier
-        );
-        OrderTypes.TakerOrder memory takerOrder = buildTakerOrder(
-            context.fulfiller,
-            makerOrder
-        );
-
-        if (context.listOnChain) {
-            _notImplemented();
-        }
-
-        execution.executeOrder = TestCallParameters(
-            address(looksRare),
-            0,
-            abi.encodeWithSelector(
-                ILooksRareExchange.matchAskWithTakerBid.selector,
-                takerOrder,
-                makerOrder
-            )
-        );
-    }
-
-    function getPayload_BuyOfferedERC1155WithERC20(
-        TestOrderContext calldata context,
-        TestItem1155 calldata nft,
-        TestItem20 calldata erc20
-    ) external view override returns (TestOrderPayload memory execution) {
-        OrderTypes.MakerOrder memory makerOrder = buildMakerOrder(
-            true,
-            context.offerer,
-            erc20.token,
-            erc20.amount,
-            nft.token,
-            nft.amount,
-            nft.identifier
-        );
-        OrderTypes.TakerOrder memory takerOrder = buildTakerOrder(
-            context.fulfiller,
-            makerOrder
-        );
-
-        if (context.listOnChain) {
-            _notImplemented();
-        }
-
-        execution.executeOrder = TestCallParameters(
-            address(looksRare),
-            0,
-            abi.encodeWithSelector(
-                ILooksRareExchange.matchAskWithTakerBid.selector,
-                takerOrder,
-                makerOrder
-            )
-        );
-    }
-
+    /// @dev Sell ERC721 in ERC20
     function getPayload_BuyOfferedERC20WithERC721(
         TestOrderContext calldata context,
         TestItem20 calldata erc20,
@@ -281,40 +182,6 @@ contract LooksRareConfig is BaseMarketConfig, LooksRareTypeHashes {
             erc20.amount,
             nft.token,
             1,
-            nft.identifier
-        );
-        OrderTypes.TakerOrder memory takerOrder = buildTakerOrder(
-            context.fulfiller,
-            makerOrder
-        );
-
-        if (context.listOnChain) {
-            _notImplemented();
-        }
-
-        execution.executeOrder = TestCallParameters(
-            address(looksRare),
-            0,
-            abi.encodeWithSelector(
-                ILooksRareExchange.matchBidWithTakerAsk.selector,
-                takerOrder,
-                makerOrder
-            )
-        );
-    }
-
-    function getPayload_BuyOfferedERC20WithERC1155(
-        TestOrderContext calldata context,
-        TestItem20 calldata erc20,
-        TestItem1155 calldata nft
-    ) external view override returns (TestOrderPayload memory execution) {
-        OrderTypes.MakerOrder memory makerOrder = buildMakerOrder(
-            false,
-            context.offerer,
-            erc20.token,
-            erc20.amount,
-            nft.token,
-            nft.amount,
             nft.identifier
         );
         OrderTypes.TakerOrder memory takerOrder = buildTakerOrder(
