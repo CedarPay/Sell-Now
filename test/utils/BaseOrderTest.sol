@@ -1,15 +1,11 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.13;
-import { DSTestPlus } from "solmate/test/utils/DSTestPlus.sol";
-import { stdStorage, StdStorage } from "forge-std/Test.sol";
+import "forge-std/Test.sol";
 import { TestERC1155 } from "../tokens/TestERC1155.sol";
 import { TestERC20 } from "../tokens/TestERC20.sol";
 import { TestERC721 } from "../tokens/TestERC721.sol";
 
-contract BaseOrderTest is DSTestPlus {
-    using stdStorage for StdStorage;
-    StdStorage stdstore;
-
+contract BaseOrderTest is Test {
     uint256 constant MAX_INT = ~uint256(0);
 
     uint256 internal alicePk = 0xa11ce;
@@ -17,11 +13,11 @@ contract BaseOrderTest is DSTestPlus {
     uint256 internal calPk = 0xca1;
     uint256 internal feeReciever1Pk = 0xfee1;
     uint256 internal feeReciever2Pk = 0xfee2;
-    address payable internal alice = payable(hevm.addr(alicePk));
-    address payable internal bob = payable(hevm.addr(bobPk));
-    address payable internal cal = payable(hevm.addr(calPk));
-    address payable internal feeReciever1 = payable(hevm.addr(feeReciever1Pk));
-    address payable internal feeReciever2 = payable(hevm.addr(feeReciever2Pk));
+    address payable internal alice = payable(vm.addr(alicePk));
+    address payable internal bob = payable(vm.addr(bobPk));
+    address payable internal cal = payable(vm.addr(calPk));
+    address payable internal feeReciever1 = payable(vm.addr(feeReciever1Pk));
+    address payable internal feeReciever2 = payable(vm.addr(feeReciever2Pk));
 
     TestERC20 internal token1;
     TestERC20 internal token2;
@@ -62,10 +58,10 @@ contract BaseOrderTest is DSTestPlus {
     }
 
     function setUp() public virtual {
-        hevm.label(alice, "alice");
-        hevm.label(bob, "bob");
-        hevm.label(cal, "cal");
-        hevm.label(address(this), "testContract");
+        vm.label(alice, "alice");
+        vm.label(bob, "bob");
+        vm.label(cal, "cal");
+        vm.label(address(this), "testContract");
 
         privateKeys[alice] = alicePk;
         privateKeys[bob] = bobPk;
@@ -108,11 +104,11 @@ contract BaseOrderTest is DSTestPlus {
         test1155_1 = new TestERC1155();
         test1155_2 = new TestERC1155();
         test1155_3 = new TestERC1155();
-        hevm.label(address(token1), "token1");
-        hevm.label(address(test721_1), "test721_1");
-        hevm.label(address(test1155_1), "test1155_1");
-        hevm.label(address(feeReciever1), "feeReciever1");
-        hevm.label(address(feeReciever2), "feeReciever2");
+        vm.label(address(token1), "token1");
+        vm.label(address(test721_1), "test721_1");
+        vm.label(address(test1155_1), "test1155_1");
+        vm.label(address(feeReciever1), "feeReciever1");
+        vm.label(address(feeReciever2), "feeReciever2");
     }
 
     function _setApprovals(
@@ -121,7 +117,7 @@ contract BaseOrderTest is DSTestPlus {
         address _erc721Target,
         address _erc1155Target
     ) internal {
-        hevm.startPrank(_owner);
+        vm.startPrank(_owner);
         for (uint256 i = 0; i < erc20s.length; i++) {
             erc20s[i].approve(_erc20Target, MAX_INT);
         }
@@ -135,7 +131,7 @@ contract BaseOrderTest is DSTestPlus {
             );
         }
 
-        hevm.stopPrank();
+        vm.stopPrank();
     }
 
     /**
@@ -146,15 +142,15 @@ contract BaseOrderTest is DSTestPlus {
         _resetTokensStorage();
         _restoreEthBalances();
         _resetMarketStorage(market);
-        hevm.record();
+        vm.record();
     }
 
     function _restoreEthBalances() internal {
         for (uint256 i = 0; i < accounts.length; i++) {
-            hevm.deal(accounts[i], uint128(MAX_INT));
+            vm.deal(accounts[i], uint128(MAX_INT));
         }
-        hevm.deal(feeReciever1, 0);
-        hevm.deal(feeReciever2, 0);
+        vm.deal(feeReciever1, 0);
+        vm.deal(feeReciever2, 0);
     }
 
     /**
@@ -162,16 +158,16 @@ contract BaseOrderTest is DSTestPlus {
      */
     function _resetMarketStorage(address market) internal {
         if (!originalMarketWriteSlots[0]) {
-            (, bytes32[] memory writeSlots1) = hevm.accesses(market);
+            (, bytes32[] memory writeSlots1) = vm.accesses(market);
             for (uint256 i = 0; i < writeSlots1.length; i++) {
                 originalMarketWriteSlots[writeSlots1[i]] = true;
             }
             originalMarketWriteSlots[0] = true;
         }
-        (, bytes32[] memory writeSlots) = hevm.accesses(market);
+        (, bytes32[] memory writeSlots) = vm.accesses(market);
         for (uint256 i = 0; i < writeSlots.length; i++) {
             if (originalMarketWriteSlots[writeSlots[i]]) continue;
-            hevm.store(market, writeSlots[i], bytes32(0));
+            vm.store(market, writeSlots[i], bytes32(0));
         }
     }
 
@@ -188,9 +184,9 @@ contract BaseOrderTest is DSTestPlus {
      *      note: must be called in conjunction with vm.record()
      */
     function _resetStorage(address _addr) internal {
-        (, bytes32[] memory writeSlots) = hevm.accesses(_addr);
+        (, bytes32[] memory writeSlots) = vm.accesses(_addr);
         for (uint256 i = 0; i < writeSlots.length; i++) {
-            hevm.store(_addr, writeSlots[i], bytes32(0));
+            vm.store(_addr, writeSlots[i], bytes32(0));
         }
     }
 

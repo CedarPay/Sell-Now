@@ -28,54 +28,25 @@ contract GenericMarketplaceTest is BaseOrderTest {
     }
 
     function testSeaport() external {
-        benchmarkMarket(seaportConfig);
+        Market(seaportConfig);
     }
 
     function testX2Y2() external {
-        benchmarkMarket(x2y2Config);
+        Market(x2y2Config);
     }
 
     function testLooksRare() external {
-        benchmarkMarket(looksRareConfig);
+        Market(looksRareConfig);
     }
 
     function testSudoswap() external {
-        benchmarkMarket(sudoswapConfig);
+        Market(sudoswapConfig);
     }
 
-    function benchmarkMarket(BaseMarketConfig config) public {
+    function Market(BaseMarketConfig config) public {
         beforeAllPrepareMarketplaceTest(config);
-        benchmark_BuyOfferedERC721WithEther_ListOnChain(config);
-        benchmark_BuyOfferedERC721WithEther(config);
-        benchmark_BuyOfferedERC1155WithEther_ListOnChain(config);
-        benchmark_BuyOfferedERC1155WithEther(config);
-        benchmark_BuyOfferedERC721WithERC20_ListOnChain(config);
-        benchmark_BuyOfferedERC721WithERC20(config);
-        benchmark_BuyOfferedERC1155WithERC20_ListOnChain(config);
-        benchmark_BuyOfferedERC1155WithERC20(config);
-        benchmark_BuyOfferedERC20WithERC721_ListOnChain(config);
-        benchmark_BuyOfferedERC20WithERC721(config);
-        benchmark_BuyOfferedERC20WithERC1155_ListOnChain(config);
-        benchmark_BuyOfferedERC20WithERC1155(config);
-        benchmark_BuyOfferedERC721WithERC1155_ListOnChain(config);
-        benchmark_BuyOfferedERC721WithERC1155(config);
-        benchmark_BuyOfferedERC1155WithERC721_ListOnChain(config);
-        benchmark_BuyOfferedERC1155WithERC721(config);
-        benchmark_BuyOfferedERC721WithEtherFee_ListOnChain(config);
-        benchmark_BuyOfferedERC721WithEtherFee(config);
-        benchmark_BuyOfferedERC721WithEtherFeeTwoRecipients_ListOnChain(config);
-        benchmark_BuyOfferedERC721WithEtherFeeTwoRecipients(config);
-        benchmark_BuyTenOfferedERC721WithEther_ListOnChain(config);
-        benchmark_BuyTenOfferedERC721WithEther(config);
-        benchmark_BuyTenOfferedERC721WithEtherDistinctOrders_ListOnChain(
-            config
-        );
-        benchmark_BuyTenOfferedERC721WithEtherDistinctOrders(config);
-        benchmark_BuyTenOfferedERC721WithErc20DistinctOrders_ListOnChain(
-            config
-        );
-        benchmark_BuyTenOfferedERC721WithErc20DistinctOrders(config);
-        benchmark_MatchOrders_ABCA(config);
+        BuyOfferedERC20WithERC721_ListOnChain(config);
+        BuyOfferedERC20WithERC721(config);
     }
 
     function beforeAllPrepareMarketplaceTest(BaseMarketConfig config) internal {
@@ -87,9 +58,9 @@ contract GenericMarketplaceTest is BaseOrderTest {
             erc721Addresses
         );
         for (uint256 i = 0; i < setupCalls.length; i++) {
-            hevm.startPrank(setupCalls[i].sender);
+            vm.startPrank(setupCalls[i].sender);
             (setupCalls[i].target).call(setupCalls[i].data);
-            hevm.stopPrank();
+            vm.stopPrank();
         }
 
         // Do any final setup within config
@@ -99,286 +70,8 @@ contract GenericMarketplaceTest is BaseOrderTest {
     /*//////////////////////////////////////////////////////////////
                         Tests
     //////////////////////////////////////////////////////////////*/
-
-    function benchmark_BuyOfferedERC721WithEther_ListOnChain(
-        BaseMarketConfig config
-    ) internal prepareTest(config) {
-        string memory testLabel = "(ERC721 -> ETH List-On-Chain)";
-        test721_1.mint(alice, 1);
-        try
-            config.getPayload_BuyOfferedERC721WithEther(
-                TestOrderContext(true, alice, bob),
-                TestItem721(address(test721_1), 1),
-                100
-            )
-        returns (TestOrderPayload memory payload) {
-            _benchmarkCallWithParams(
-                config.name(),
-                string(abi.encodePacked(testLabel, " List")),
-                alice,
-                payload.submitOrder
-            );
-
-            // Allow the market to escrow after listing
-            assert(
-                test721_1.ownerOf(1) == alice ||
-                    test721_1.ownerOf(1) == config.market()
-            );
-
-            _benchmarkCallWithParams(
-                config.name(),
-                string(abi.encodePacked(testLabel, " Fulfill")),
-                bob,
-                payload.executeOrder
-            );
-
-            assertEq(test721_1.ownerOf(1), bob);
-        } catch {
-            _logNotSupported(config.name(), testLabel);
-        }
-    }
-
-    function benchmark_BuyOfferedERC721WithEther(BaseMarketConfig config)
-        internal
-        prepareTest(config)
-    {
-        string memory testLabel = "(ERC721 -> ETH)";
-        test721_1.mint(alice, 1);
-        try
-            config.getPayload_BuyOfferedERC721WithEther(
-                TestOrderContext(false, alice, bob),
-                TestItem721(address(test721_1), 1),
-                100
-            )
-        returns (TestOrderPayload memory payload) {
-            assertEq(test721_1.ownerOf(1), alice);
-
-            _benchmarkCallWithParams(
-                config.name(),
-                string(abi.encodePacked(testLabel, " Fulfill, w/ Sig")),
-                bob,
-                payload.executeOrder
-            );
-
-            assertEq(test721_1.ownerOf(1), bob);
-        } catch {
-            _logNotSupported(config.name(), testLabel);
-        }
-    }
-
-    function benchmark_BuyOfferedERC1155WithEther_ListOnChain(
-        BaseMarketConfig config
-    ) internal prepareTest(config) {
-        string memory testLabel = "(ERC1155 -> ETH List-On-Chain)";
-        test1155_1.mint(alice, 1, 1);
-        try
-            config.getPayload_BuyOfferedERC1155WithEther(
-                TestOrderContext(true, alice, bob),
-                TestItem1155(address(test1155_1), 1, 1),
-                100
-            )
-        returns (TestOrderPayload memory payload) {
-            _benchmarkCallWithParams(
-                config.name(),
-                string(abi.encodePacked(testLabel, " List")),
-                alice,
-                payload.submitOrder
-            );
-
-            assertEq(test1155_1.balanceOf(alice, 1), 1);
-            assertEq(test1155_1.balanceOf(bob, 1), 0);
-
-            _benchmarkCallWithParams(
-                config.name(),
-                string(abi.encodePacked(testLabel, " Fulfill")),
-                bob,
-                payload.executeOrder
-            );
-
-            assertEq(test1155_1.balanceOf(alice, 1), 0);
-            assertEq(test1155_1.balanceOf(bob, 1), 1);
-        } catch {
-            _logNotSupported(config.name(), testLabel);
-        }
-    }
-
-    function benchmark_BuyOfferedERC1155WithEther(BaseMarketConfig config)
-        internal
-        prepareTest(config)
-    {
-        string memory testLabel = "(ERC1155 -> ETH)";
-        test1155_1.mint(alice, 1, 1);
-        try
-            config.getPayload_BuyOfferedERC1155WithEther(
-                TestOrderContext(false, alice, bob),
-                TestItem1155(address(test1155_1), 1, 1),
-                100
-            )
-        returns (TestOrderPayload memory payload) {
-            assertEq(test1155_1.balanceOf(alice, 1), 1);
-
-            _benchmarkCallWithParams(
-                config.name(),
-                string(abi.encodePacked(testLabel, " Fulfill, w/ Sig")),
-                bob,
-                payload.executeOrder
-            );
-
-            assertEq(test1155_1.balanceOf(bob, 1), 1);
-        } catch {
-            _logNotSupported(config.name(), testLabel);
-        }
-    }
-
-    function benchmark_BuyOfferedERC721WithERC20_ListOnChain(
-        BaseMarketConfig config
-    ) internal prepareTest(config) {
-        string memory testLabel = "(ERC721 -> ERC20 List-On-Chain)";
-        test721_1.mint(alice, 1);
-        token1.mint(bob, 100);
-        try
-            config.getPayload_BuyOfferedERC721WithERC20(
-                TestOrderContext(true, alice, bob),
-                TestItem721(address(test721_1), 1),
-                TestItem20(address(token1), 100)
-            )
-        returns (TestOrderPayload memory payload) {
-            _benchmarkCallWithParams(
-                config.name(),
-                string(abi.encodePacked(testLabel, " List")),
-                alice,
-                payload.submitOrder
-            );
-
-            // Allow the market to escrow after listing
-            assert(
-                test721_1.ownerOf(1) == alice ||
-                    test721_1.ownerOf(1) == config.market()
-            );
-            assertEq(token1.balanceOf(alice), 0);
-            assertEq(token1.balanceOf(bob), 100);
-
-            _benchmarkCallWithParams(
-                config.name(),
-                string(abi.encodePacked(testLabel, " Fulfill")),
-                bob,
-                payload.executeOrder
-            );
-
-            assertEq(test721_1.ownerOf(1), bob);
-            assertEq(token1.balanceOf(alice), 100);
-            assertEq(token1.balanceOf(bob), 0);
-        } catch {
-            _logNotSupported(config.name(), testLabel);
-        }
-    }
-
-    function benchmark_BuyOfferedERC721WithERC20(BaseMarketConfig config)
-        internal
-        prepareTest(config)
-    {
-        string memory testLabel = "(ERC721 -> ERC20)";
-        test721_1.mint(alice, 1);
-        token1.mint(bob, 100);
-        try
-            config.getPayload_BuyOfferedERC721WithERC20(
-                TestOrderContext(false, alice, bob),
-                TestItem721(address(test721_1), 1),
-                TestItem20(address(token1), 100)
-            )
-        returns (TestOrderPayload memory payload) {
-            assertEq(test721_1.ownerOf(1), alice);
-            assertEq(token1.balanceOf(alice), 0);
-            assertEq(token1.balanceOf(bob), 100);
-
-            _benchmarkCallWithParams(
-                config.name(),
-                string(abi.encodePacked(testLabel, " Fulfill, w/ Sig")),
-                bob,
-                payload.executeOrder
-            );
-
-            assertEq(test721_1.ownerOf(1), bob);
-            assertEq(token1.balanceOf(alice), 100);
-            assertEq(token1.balanceOf(bob), 0);
-        } catch {
-            _logNotSupported(config.name(), testLabel);
-        }
-    }
-
-    function benchmark_BuyOfferedERC1155WithERC20_ListOnChain(
-        BaseMarketConfig config
-    ) internal prepareTest(config) {
-        string memory testLabel = "(ERC1155 -> ERC20 List-On-Chain)";
-        test1155_1.mint(alice, 1, 1);
-        token1.mint(bob, 100);
-        try
-            config.getPayload_BuyOfferedERC1155WithERC20(
-                TestOrderContext(true, alice, bob),
-                TestItem1155(address(test1155_1), 1, 1),
-                TestItem20(address(token1), 100)
-            )
-        returns (TestOrderPayload memory payload) {
-            _benchmarkCallWithParams(
-                config.name(),
-                string(abi.encodePacked(testLabel, " List")),
-                alice,
-                payload.submitOrder
-            );
-
-            assertEq(test1155_1.balanceOf(alice, 1), 1);
-            assertEq(token1.balanceOf(alice), 0);
-            assertEq(token1.balanceOf(bob), 100);
-
-            _benchmarkCallWithParams(
-                config.name(),
-                string(abi.encodePacked(testLabel, " Fulfill")),
-                bob,
-                payload.executeOrder
-            );
-
-            assertEq(test1155_1.balanceOf(bob, 1), 1);
-            assertEq(token1.balanceOf(alice), 100);
-            assertEq(token1.balanceOf(bob), 0);
-        } catch {
-            _logNotSupported(config.name(), testLabel);
-        }
-    }
-
-    function benchmark_BuyOfferedERC1155WithERC20(BaseMarketConfig config)
-        internal
-        prepareTest(config)
-    {
-        string memory testLabel = "(ERC1155 -> ERC20)";
-        test1155_1.mint(alice, 1, 1);
-        token1.mint(bob, 100);
-        try
-            config.getPayload_BuyOfferedERC1155WithERC20(
-                TestOrderContext(false, alice, bob),
-                TestItem1155(address(test1155_1), 1, 1),
-                TestItem20(address(token1), 100)
-            )
-        returns (TestOrderPayload memory payload) {
-            assertEq(test1155_1.balanceOf(alice, 1), 1);
-            assertEq(token1.balanceOf(alice), 0);
-            assertEq(token1.balanceOf(bob), 100);
-
-            _benchmarkCallWithParams(
-                config.name(),
-                string(abi.encodePacked(testLabel, " Fulfill w/ Sig")),
-                bob,
-                payload.executeOrder
-            );
-
-            assertEq(test1155_1.balanceOf(bob, 1), 1);
-            assertEq(token1.balanceOf(alice), 100);
-            assertEq(token1.balanceOf(bob), 0);
-        } catch {
-            _logNotSupported(config.name(), testLabel);
-        }
-    }
-
-    function benchmark_BuyOfferedERC20WithERC721_ListOnChain(
+ 
+    function BuyOfferedERC20WithERC721_ListOnChain(
         BaseMarketConfig config
     ) internal prepareTest(config) {
         string memory testLabel = "(ERC20 -> ERC721 List-On-Chain)";
@@ -391,7 +84,7 @@ contract GenericMarketplaceTest is BaseOrderTest {
                 TestItem721(address(test721_1), 1)
             )
         returns (TestOrderPayload memory payload) {
-            _benchmarkCallWithParams(
+            _CallWithParams(
                 config.name(),
                 string(abi.encodePacked(testLabel, " List")),
                 alice,
@@ -406,7 +99,7 @@ contract GenericMarketplaceTest is BaseOrderTest {
             );
             assertEq(token1.balanceOf(bob), 0);
 
-            _benchmarkCallWithParams(
+            _CallWithParams(
                 config.name(),
                 string(abi.encodePacked(testLabel, " Fulfill")),
                 bob,
@@ -421,7 +114,7 @@ contract GenericMarketplaceTest is BaseOrderTest {
         }
     }
 
-    function benchmark_BuyOfferedERC20WithERC721(BaseMarketConfig config)
+    function BuyOfferedERC20WithERC721(BaseMarketConfig config)
         internal
         prepareTest(config)
     {
@@ -439,7 +132,7 @@ contract GenericMarketplaceTest is BaseOrderTest {
             assertEq(token1.balanceOf(alice), 100);
             assertEq(token1.balanceOf(bob), 0);
 
-            _benchmarkCallWithParams(
+            _CallWithParams(
                 config.name(),
                 string(abi.encodePacked(testLabel, " Fulfill w/ Sig")),
                 bob,
@@ -449,689 +142,6 @@ contract GenericMarketplaceTest is BaseOrderTest {
             assertEq(test721_1.ownerOf(1), alice);
             assertEq(token1.balanceOf(alice), 0);
             assertEq(token1.balanceOf(bob), 100);
-        } catch {
-            _logNotSupported(config.name(), testLabel);
-        }
-    }
-
-    function benchmark_BuyOfferedERC20WithERC1155_ListOnChain(
-        BaseMarketConfig config
-    ) internal prepareTest(config) {
-        string memory testLabel = "(ERC20 -> ERC1155 List-On-Chain)";
-        TestOrderContext memory context = TestOrderContext(true, alice, bob);
-        token1.mint(alice, 100);
-        test1155_1.mint(bob, 1, 1);
-        try
-            config.getPayload_BuyOfferedERC20WithERC1155(
-                context,
-                TestItem20(address(token1), 100),
-                TestItem1155(address(test1155_1), 1, 1)
-            )
-        returns (TestOrderPayload memory payload) {
-            _benchmarkCallWithParams(
-                config.name(),
-                string(abi.encodePacked(testLabel, " List")),
-                alice,
-                payload.submitOrder
-            );
-
-            assertEq(test1155_1.balanceOf(bob, 1), 1);
-            assertEq(token1.balanceOf(alice), 100);
-            assertEq(token1.balanceOf(bob), 0);
-
-            _benchmarkCallWithParams(
-                config.name(),
-                string(abi.encodePacked(testLabel, " Fulfill")),
-                bob,
-                payload.executeOrder
-            );
-
-            assertEq(test1155_1.balanceOf(alice, 1), 1);
-            assertEq(token1.balanceOf(alice), 0);
-            assertEq(token1.balanceOf(bob), 100);
-        } catch {
-            _logNotSupported(config.name(), testLabel);
-        }
-    }
-
-    function benchmark_BuyOfferedERC20WithERC1155(BaseMarketConfig config)
-        internal
-        prepareTest(config)
-    {
-        string memory testLabel = "(ERC20 -> ERC1155)";
-        TestOrderContext memory context = TestOrderContext(false, alice, bob);
-        token1.mint(alice, 100);
-        test1155_1.mint(bob, 1, 1);
-        try
-            config.getPayload_BuyOfferedERC20WithERC1155(
-                context,
-                TestItem20(address(token1), 100),
-                TestItem1155(address(test1155_1), 1, 1)
-            )
-        returns (TestOrderPayload memory payload) {
-            assertEq(test1155_1.balanceOf(bob, 1), 1);
-            assertEq(token1.balanceOf(alice), 100);
-            assertEq(token1.balanceOf(bob), 0);
-
-            _benchmarkCallWithParams(
-                config.name(),
-                string(abi.encodePacked(testLabel, " Fulfill w/ Sig")),
-                bob,
-                payload.executeOrder
-            );
-
-            assertEq(test1155_1.balanceOf(alice, 1), 1);
-            assertEq(token1.balanceOf(alice), 0);
-            assertEq(token1.balanceOf(bob), 100);
-        } catch {
-            _logNotSupported(config.name(), testLabel);
-        }
-    }
-
-    function benchmark_BuyOfferedERC721WithERC1155_ListOnChain(
-        BaseMarketConfig config
-    ) internal prepareTest(config) {
-        string memory testLabel = "(ERC721 -> ERC1155 List-On-Chain)";
-        TestOrderContext memory context = TestOrderContext(true, alice, bob);
-        test721_1.mint(alice, 1);
-        test1155_1.mint(bob, 1, 1);
-        try
-            config.getPayload_BuyOfferedERC721WithERC1155(
-                context,
-                TestItem721(address(test721_1), 1),
-                TestItem1155(address(test1155_1), 1, 1)
-            )
-        returns (TestOrderPayload memory payload) {
-            _benchmarkCallWithParams(
-                config.name(),
-                string(abi.encodePacked(testLabel, " List")),
-                alice,
-                payload.submitOrder
-            );
-
-            assertEq(test721_1.ownerOf(1), alice);
-            assertEq(test1155_1.balanceOf(bob, 1), 1);
-
-            _benchmarkCallWithParams(
-                config.name(),
-                string(abi.encodePacked(testLabel, " Fulfill")),
-                bob,
-                payload.executeOrder
-            );
-
-            assertEq(test721_1.ownerOf(1), bob);
-            assertEq(test1155_1.balanceOf(alice, 1), 1);
-        } catch {
-            _logNotSupported(config.name(), testLabel);
-        }
-    }
-
-    function benchmark_BuyOfferedERC721WithERC1155(BaseMarketConfig config)
-        internal
-        prepareTest(config)
-    {
-        string memory testLabel = "(ERC721 -> ERC1155)";
-        TestOrderContext memory context = TestOrderContext(false, alice, bob);
-        test721_1.mint(alice, 1);
-        test1155_1.mint(bob, 1, 1);
-        try
-            config.getPayload_BuyOfferedERC721WithERC1155(
-                context,
-                TestItem721(address(test721_1), 1),
-                TestItem1155(address(test1155_1), 1, 1)
-            )
-        returns (TestOrderPayload memory payload) {
-            assertEq(test721_1.ownerOf(1), alice);
-            assertEq(test1155_1.balanceOf(bob, 1), 1);
-
-            _benchmarkCallWithParams(
-                config.name(),
-                string(abi.encodePacked(testLabel, " Fulfill w/ Sig")),
-                bob,
-                payload.executeOrder
-            );
-
-            assertEq(test721_1.ownerOf(1), bob);
-            assertEq(test1155_1.balanceOf(alice, 1), 1);
-        } catch {
-            _logNotSupported(config.name(), testLabel);
-        }
-    }
-
-    function benchmark_BuyOfferedERC1155WithERC721_ListOnChain(
-        BaseMarketConfig config
-    ) internal prepareTest(config) {
-        string memory testLabel = "(ERC1155 -> ERC721 List-On-Chain)";
-        TestOrderContext memory context = TestOrderContext(true, alice, bob);
-        test1155_1.mint(alice, 1, 1);
-        test721_1.mint(bob, 1);
-        try
-            config.getPayload_BuyOfferedERC1155WithERC721(
-                context,
-                TestItem1155(address(test1155_1), 1, 1),
-                TestItem721(address(test721_1), 1)
-            )
-        returns (TestOrderPayload memory payload) {
-            _benchmarkCallWithParams(
-                config.name(),
-                string(abi.encodePacked(testLabel, " List")),
-                alice,
-                payload.submitOrder
-            );
-
-            assertEq(test721_1.ownerOf(1), bob);
-            assertEq(test1155_1.balanceOf(alice, 1), 1);
-
-            _benchmarkCallWithParams(
-                config.name(),
-                string(abi.encodePacked(testLabel, " Fulfill")),
-                bob,
-                payload.executeOrder
-            );
-
-            assertEq(test721_1.ownerOf(1), alice);
-            assertEq(test1155_1.balanceOf(bob, 1), 1);
-        } catch {
-            _logNotSupported(config.name(), testLabel);
-        }
-    }
-
-    function benchmark_BuyOfferedERC1155WithERC721(BaseMarketConfig config)
-        internal
-        prepareTest(config)
-    {
-        string memory testLabel = "(ERC1155 -> ERC721)";
-        TestOrderContext memory context = TestOrderContext(false, alice, bob);
-        test1155_1.mint(alice, 1, 1);
-        test721_1.mint(bob, 1);
-        try
-            config.getPayload_BuyOfferedERC1155WithERC721(
-                context,
-                TestItem1155(address(test1155_1), 1, 1),
-                TestItem721(address(test721_1), 1)
-            )
-        returns (TestOrderPayload memory payload) {
-            assertEq(test721_1.ownerOf(1), bob);
-            assertEq(test1155_1.balanceOf(alice, 1), 1);
-
-            _benchmarkCallWithParams(
-                config.name(),
-                string(abi.encodePacked(testLabel, " Fulfill w/ Sig")),
-                bob,
-                payload.executeOrder
-            );
-
-            assertEq(test721_1.ownerOf(1), alice);
-            assertEq(test1155_1.balanceOf(bob, 1), 1);
-        } catch {
-            _logNotSupported(config.name(), testLabel);
-        }
-    }
-
-    function benchmark_BuyOfferedERC721WithEtherFee_ListOnChain(
-        BaseMarketConfig config
-    ) internal prepareTest(config) {
-        string
-            memory testLabel = "(ERC721 -> ETH One-Fee-Recipient List-On-Chain)";
-        test721_1.mint(alice, 1);
-        try
-            config.getPayload_BuyOfferedERC721WithEtherOneFeeRecipient(
-                TestOrderContext(true, alice, bob),
-                TestItem721(address(test721_1), 1),
-                500, // increased so that the fee recipient recieves 1%
-                feeReciever1,
-                5
-            )
-        returns (TestOrderPayload memory payload) {
-            _benchmarkCallWithParams(
-                config.name(),
-                string(abi.encodePacked(testLabel, " List")),
-                alice,
-                payload.submitOrder
-            );
-
-            // Allow the market to escrow after listing
-            assert(
-                test721_1.ownerOf(1) == alice ||
-                    test721_1.ownerOf(1) == config.market()
-            );
-            assertEq(feeReciever1.balance, 0);
-
-            _benchmarkCallWithParams(
-                config.name(),
-                string(abi.encodePacked(testLabel, " Fulfill")),
-                bob,
-                payload.executeOrder
-            );
-
-            assertEq(test721_1.ownerOf(1), bob);
-            assertEq(feeReciever1.balance, 5);
-        } catch {
-            _logNotSupported(config.name(), testLabel);
-        }
-    }
-
-    function benchmark_BuyOfferedERC721WithEtherFee(BaseMarketConfig config)
-        internal
-        prepareTest(config)
-    {
-        string memory testLabel = "(ERC721 -> ETH One-Fee-Recipient)";
-        test721_1.mint(alice, 1);
-        try
-            config.getPayload_BuyOfferedERC721WithEtherOneFeeRecipient(
-                TestOrderContext(false, alice, bob),
-                TestItem721(address(test721_1), 1),
-                100,
-                feeReciever1,
-                5
-            )
-        returns (TestOrderPayload memory payload) {
-            assertEq(test721_1.ownerOf(1), alice);
-            assertEq(feeReciever1.balance, 0);
-
-            _benchmarkCallWithParams(
-                config.name(),
-                string(abi.encodePacked(testLabel, " Fulfill w/ Sig")),
-                bob,
-                payload.executeOrder
-            );
-
-            assertEq(test721_1.ownerOf(1), bob);
-            assertEq(feeReciever1.balance, 5);
-        } catch {
-            _logNotSupported(config.name(), testLabel);
-        }
-    }
-
-    function benchmark_BuyOfferedERC721WithEtherFeeTwoRecipients_ListOnChain(
-        BaseMarketConfig config
-    ) internal prepareTest(config) {
-        string
-            memory testLabel = "(ERC721 -> ETH Two-Fee-Recipient List-On-Chain)";
-        test721_1.mint(alice, 1);
-        try
-            config.getPayload_BuyOfferedERC721WithEtherTwoFeeRecipient(
-                TestOrderContext(true, alice, bob),
-                TestItem721(address(test721_1), 1),
-                100,
-                feeReciever1,
-                5,
-                feeReciever2,
-                5
-            )
-        returns (TestOrderPayload memory payload) {
-            _benchmarkCallWithParams(
-                config.name(),
-                string(abi.encodePacked(testLabel, " List")),
-                alice,
-                payload.submitOrder
-            );
-
-            // Allow the market to escrow after listing
-            assert(
-                test721_1.ownerOf(1) == alice ||
-                    test721_1.ownerOf(1) == config.market()
-            );
-            assertEq(feeReciever1.balance, 0);
-            assertEq(feeReciever2.balance, 0);
-
-            _benchmarkCallWithParams(
-                config.name(),
-                string(abi.encodePacked(testLabel, " Fulfill")),
-                bob,
-                payload.executeOrder
-            );
-
-            assertEq(test721_1.ownerOf(1), bob);
-            assertEq(feeReciever1.balance, 5);
-            assertEq(feeReciever2.balance, 5);
-        } catch {
-            _logNotSupported(config.name(), testLabel);
-        }
-    }
-
-    function benchmark_BuyOfferedERC721WithEtherFeeTwoRecipients(
-        BaseMarketConfig config
-    ) internal prepareTest(config) {
-        string memory testLabel = "(ERC721 -> ETH Two-Fee-Recipient)";
-        test721_1.mint(alice, 1);
-        try
-            config.getPayload_BuyOfferedERC721WithEtherTwoFeeRecipient(
-                TestOrderContext(false, alice, bob),
-                TestItem721(address(test721_1), 1),
-                100,
-                feeReciever1,
-                5,
-                feeReciever2,
-                5
-            )
-        returns (TestOrderPayload memory payload) {
-            assertEq(test721_1.ownerOf(1), alice);
-            assertEq(feeReciever1.balance, 0);
-            assertEq(feeReciever2.balance, 0);
-
-            _benchmarkCallWithParams(
-                config.name(),
-                string(abi.encodePacked(testLabel, " Fullfil /w Sig")),
-                bob,
-                payload.executeOrder
-            );
-
-            assertEq(test721_1.ownerOf(1), bob);
-            assertEq(feeReciever1.balance, 5);
-            assertEq(feeReciever2.balance, 5);
-        } catch {
-            _logNotSupported(config.name(), testLabel);
-        }
-    }
-
-    function benchmark_BuyTenOfferedERC721WithEther_ListOnChain(
-        BaseMarketConfig config
-    ) internal prepareTest(config) {
-        string memory testLabel = "(ERC721x10 -> ETH List-On-Chain)";
-
-        TestItem721[] memory nfts = new TestItem721[](10);
-        for (uint256 i = 0; i < 10; i++) {
-            test721_1.mint(alice, i + 1);
-            nfts[i] = TestItem721(address(test721_1), i + 1);
-        }
-
-        try
-            config.getPayload_BuyOfferedManyERC721WithEther(
-                TestOrderContext(true, alice, bob),
-                nfts,
-                100
-            )
-        returns (TestOrderPayload memory payload) {
-            _benchmarkCallWithParams(
-                config.name(),
-                string(abi.encodePacked(testLabel, " List")),
-                alice,
-                payload.submitOrder
-            );
-
-            for (uint256 i = 0; i < 10; i++) {
-                assertTrue(
-                    test721_1.ownerOf(i + 1) == alice ||
-                        test721_1.ownerOf(i + 1) == config.market(),
-                    "Not owner"
-                );
-            }
-
-            _benchmarkCallWithParams(
-                config.name(),
-                string(abi.encodePacked(testLabel, " Fulfill")),
-                bob,
-                payload.executeOrder
-            );
-
-            for (uint256 i = 0; i < 10; i++) {
-                assertEq(test721_1.ownerOf(i + 1), bob);
-            }
-        } catch {
-            _logNotSupported(config.name(), testLabel);
-        }
-    }
-
-    function benchmark_BuyTenOfferedERC721WithEther(BaseMarketConfig config)
-        internal
-        prepareTest(config)
-    {
-        string memory testLabel = "(ERC721x10 -> ETH)";
-
-        TestItem721[] memory nfts = new TestItem721[](10);
-        for (uint256 i = 0; i < 10; i++) {
-            test721_1.mint(alice, i + 1);
-            nfts[i] = TestItem721(address(test721_1), i + 1);
-        }
-
-        try
-            config.getPayload_BuyOfferedManyERC721WithEther(
-                TestOrderContext(false, alice, bob),
-                nfts,
-                100
-            )
-        returns (TestOrderPayload memory payload) {
-            for (uint256 i = 0; i < 10; i++) {
-                assertEq(test721_1.ownerOf(i + 1), alice);
-            }
-
-            _benchmarkCallWithParams(
-                config.name(),
-                string(abi.encodePacked(testLabel, " Fulfill /w Sig")),
-                bob,
-                payload.executeOrder
-            );
-
-            for (uint256 i = 0; i < 10; i++) {
-                assertEq(test721_1.ownerOf(i + 1), bob);
-            }
-        } catch {
-            _logNotSupported(config.name(), testLabel);
-        }
-    }
-
-    function benchmark_BuyTenOfferedERC721WithEtherDistinctOrders(
-        BaseMarketConfig config
-    ) internal prepareTest(config) {
-        string memory testLabel = "(ERC721x10 -> ETH Distinct Orders)";
-
-        TestOrderContext[] memory contexts = new TestOrderContext[](10);
-        TestItem721[] memory nfts = new TestItem721[](10);
-        uint256[] memory ethAmounts = new uint256[](10);
-
-        for (uint256 i = 0; i < 10; i++) {
-            test721_1.mint(alice, i + 1);
-            nfts[i] = TestItem721(address(test721_1), i + 1);
-            contexts[i] = TestOrderContext(false, alice, bob);
-            ethAmounts[i] = 100 + i;
-        }
-
-        try
-            config.getPayload_BuyOfferedManyERC721WithEtherDistinctOrders(
-                contexts,
-                nfts,
-                ethAmounts
-            )
-        returns (TestOrderPayload memory payload) {
-            for (uint256 i = 1; i <= 10; i++) {
-                assertEq(test721_1.ownerOf(i), alice);
-            }
-
-            _benchmarkCallWithParams(
-                config.name(),
-                string(abi.encodePacked(testLabel, " Fulfill /w Sigs")),
-                bob,
-                payload.executeOrder
-            );
-
-            for (uint256 i = 1; i <= 10; i++) {
-                assertEq(test721_1.ownerOf(i), bob);
-            }
-        } catch {
-            _logNotSupported(config.name(), testLabel);
-        }
-    }
-
-    function benchmark_BuyTenOfferedERC721WithEtherDistinctOrders_ListOnChain(
-        BaseMarketConfig config
-    ) internal prepareTest(config) {
-        string
-            memory testLabel = "(ERC721x10 -> ETH Distinct Orders List-On-Chain)";
-
-        TestOrderContext[] memory contexts = new TestOrderContext[](10);
-        TestItem721[] memory nfts = new TestItem721[](10);
-        uint256[] memory ethAmounts = new uint256[](10);
-
-        for (uint256 i = 0; i < 10; i++) {
-            test721_1.mint(alice, i + 1);
-            nfts[i] = TestItem721(address(test721_1), i + 1);
-            contexts[i] = TestOrderContext(true, alice, bob);
-            ethAmounts[i] = 100 + i;
-        }
-
-        try
-            config.getPayload_BuyOfferedManyERC721WithEtherDistinctOrders(
-                contexts,
-                nfts,
-                ethAmounts
-            )
-        returns (TestOrderPayload memory payload) {
-            _benchmarkCallWithParams(
-                config.name(),
-                string(abi.encodePacked(testLabel, " List")),
-                alice,
-                payload.submitOrder
-            );
-
-            // @dev checking ownership here (when nfts are escrowed in different contracts) is messy so we skip it for now
-
-            _benchmarkCallWithParams(
-                config.name(),
-                string(abi.encodePacked(testLabel, " Fulfill")),
-                bob,
-                payload.executeOrder
-            );
-
-            for (uint256 i = 1; i <= 10; i++) {
-                assertEq(test721_1.ownerOf(i), bob);
-            }
-        } catch {
-            _logNotSupported(config.name(), testLabel);
-        }
-    }
-
-    function benchmark_BuyTenOfferedERC721WithErc20DistinctOrders(
-        BaseMarketConfig config
-    ) internal prepareTest(config) {
-        string memory testLabel = "(ERC721x10 -> ERC20 Distinct Orders)";
-
-        token1.mint(bob, 1045);
-        TestOrderContext[] memory contexts = new TestOrderContext[](10);
-        TestItem721[] memory nfts = new TestItem721[](10);
-        uint256[] memory erc20Amounts = new uint256[](10);
-
-        for (uint256 i = 0; i < 10; i++) {
-            test721_1.mint(alice, i + 1);
-            nfts[i] = TestItem721(address(test721_1), i + 1);
-            contexts[i] = TestOrderContext(false, alice, bob);
-            erc20Amounts[i] = 100 + i;
-        }
-
-        try
-            config.getPayload_BuyOfferedManyERC721WithErc20DistinctOrders(
-                contexts,
-                address(token1),
-                nfts,
-                erc20Amounts
-            )
-        returns (TestOrderPayload memory payload) {
-            for (uint256 i = 1; i <= 10; i++) {
-                assertEq(test721_1.ownerOf(i), alice);
-            }
-
-            _benchmarkCallWithParams(
-                config.name(),
-                string(abi.encodePacked(testLabel, " Fulfill /w Sigs")),
-                bob,
-                payload.executeOrder
-            );
-
-            for (uint256 i = 1; i <= 10; i++) {
-                assertEq(test721_1.ownerOf(i), bob);
-            }
-            assertEq(token1.balanceOf(alice), 1045);
-        } catch {
-            _logNotSupported(config.name(), testLabel);
-        }
-    }
-
-    function benchmark_BuyTenOfferedERC721WithErc20DistinctOrders_ListOnChain(
-        BaseMarketConfig config
-    ) internal prepareTest(config) {
-        string
-            memory testLabel = "(ERC721x10 -> ERC20 Distinct Orders List-On-Chain)";
-
-        token1.mint(bob, 1045);
-        TestOrderContext[] memory contexts = new TestOrderContext[](10);
-        TestItem721[] memory nfts = new TestItem721[](10);
-        uint256[] memory erc20Amounts = new uint256[](10);
-
-        for (uint256 i = 0; i < 10; i++) {
-            test721_1.mint(alice, i + 1);
-            nfts[i] = TestItem721(address(test721_1), i + 1);
-            contexts[i] = TestOrderContext(true, alice, bob);
-            erc20Amounts[i] = 100 + i;
-        }
-
-        try
-            config.getPayload_BuyOfferedManyERC721WithErc20DistinctOrders(
-                contexts,
-                address(token1),
-                nfts,
-                erc20Amounts
-            )
-        returns (TestOrderPayload memory payload) {
-            _benchmarkCallWithParams(
-                config.name(),
-                string(abi.encodePacked(testLabel, " List")),
-                alice,
-                payload.submitOrder
-            );
-
-            _benchmarkCallWithParams(
-                config.name(),
-                string(abi.encodePacked(testLabel, " Fulfill")),
-                bob,
-                payload.executeOrder
-            );
-
-            for (uint256 i = 1; i <= 10; i++) {
-                assertEq(test721_1.ownerOf(i), bob);
-            }
-        } catch {
-            _logNotSupported(config.name(), testLabel);
-        }
-    }
-
-    function benchmark_MatchOrders_ABCA(BaseMarketConfig config)
-        internal
-        prepareTest(config)
-    {
-        string memory testLabel = "(ERC721 A -> B -> C -> A)";
-
-        test721_1.mint(alice, 1);
-        test721_1.mint(cal, 2);
-        test721_1.mint(bob, 3);
-
-        TestOrderContext[] memory contexts = new TestOrderContext[](3);
-        TestItem721[] memory nfts = new TestItem721[](3);
-
-        contexts[0] = TestOrderContext(false, alice, address(0));
-        contexts[1] = TestOrderContext(false, cal, address(0));
-        contexts[2] = TestOrderContext(false, bob, address(0));
-
-        nfts[0] = TestItem721(address(test721_1), 1);
-        nfts[1] = TestItem721(address(test721_1), 2);
-        nfts[2] = TestItem721(address(test721_1), 3);
-
-        try config.getPayload_MatchOrders_ABCA(contexts, nfts) returns (
-            TestOrderPayload memory payload
-        ) {
-            assertEq(test721_1.ownerOf(1), alice);
-            assertEq(test721_1.ownerOf(2), cal);
-            assertEq(test721_1.ownerOf(3), bob);
-
-            _benchmarkCallWithParams(
-                config.name(),
-                string(abi.encodePacked(testLabel, " Fulfill /w Sigs")),
-                bob,
-                payload.executeOrder
-            );
-
-            assertEq(test721_1.ownerOf(1), bob);
-            assertEq(test721_1.ownerOf(2), alice);
-            assertEq(test721_1.ownerOf(3), cal);
         } catch {
             _logNotSupported(config.name(), testLabel);
         }
@@ -1183,7 +193,7 @@ contract GenericMarketplaceTest is BaseOrderTest {
             bytes32 s
         )
     {
-        (v, r, s) = hevm.sign(privateKeys[signer], digest);
+        (v, r, s) = vm.sign(privateKeys[signer], digest);
     }
 
     function _formatLog(string memory name, string memory label)
@@ -1204,13 +214,13 @@ contract GenericMarketplaceTest is BaseOrderTest {
         );
     }
 
-    function _benchmarkCallWithParams(
+    function _CallWithParams(
         string memory name,
         string memory label,
         address sender,
         TestCallParameters memory params
     ) internal {
-        hevm.startPrank(sender);
+        vm.startPrank(sender);
         uint256 gasDelta;
         bool success;
         assembly {
@@ -1228,7 +238,7 @@ contract GenericMarketplaceTest is BaseOrderTest {
                 revert(0, returndatasize())
             }
         }
-        hevm.stopPrank();
+        vm.stopPrank();
         emit log_named_uint(
             _formatLog(name, string(abi.encodePacked(label, " (direct)"))),
             gasDelta
