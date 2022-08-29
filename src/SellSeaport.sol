@@ -44,14 +44,14 @@ contract SellSeaport {
     IWETH internal immutable WETH;
     /// @dev Contract owner
     address internal immutable OWNER;
-    /// @dev LooksRare exchange contract
+    /// @dev Seaport exchange contract
     ISeaport internal immutable SEAPORT;
 
     /// @notice Creates a new instant sell contract
     /// @param _WETH address of WETH
     /// @param _NFT address of NFT
     /// @param _SEAPORT address of seaport exchange
-    /// @param _TRANSFER_MANAGER address of looksrare transfer manager ERC721
+    /// @param _TRANSFER_MANAGER address of seaport transfer manager ERC721
     constructor(
         address _WETH,
         address _NFT,
