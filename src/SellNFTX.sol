@@ -80,13 +80,13 @@ interface INFTXMarketplaceZap {
 contract SellNFTX {
     /// @dev Contract owner
     address internal immutable OWNER;
-    /// @dev Sudoswap contract
+    /// @dev NFTX contract
     INFTXMarketplaceZap internal immutable NFTX;
 
     /// @notice Creates a new instant sell contract
     /// @param _NFT address of NFT
-    /// @param _NFTX address of sudoswap amm
-    /// @param _TRANSFER_MANAGER address of sudoswap transfer manager
+    /// @param _NFTX address of nftx amm
+    /// @param _TRANSFER_MANAGER address of nftx transfer manager
     constructor(
         address _NFT,
         address _NFTX,
@@ -94,9 +94,9 @@ contract SellNFTX {
     ) {
         // Setup contract owner
         OWNER = msg.sender;
-        // Setup Sudoswap contract (0x0fc584529a2AEfA997697FAfAcbA5831faC0c22d)
+        // Setup NFTX contract (0x0fc584529a2AEfA997697FAfAcbA5831faC0c22d)
         NFTX = INFTXMarketplaceZap(_NFTX);
-        // Give Sudoswap approval to execuate sell (0x0fc584529a2AEfA997697FAfAcbA5831faC0c22d)
+        // Give NFTX approval to execuate sell (0x0fc584529a2AEfA997697FAfAcbA5831faC0c22d)
         IERC721(_NFT).setApprovalForAll(_TRANSFER_MANAGER, true);
     }
 
