@@ -40,7 +40,7 @@ interface ILSSVMRouter {
     ) external;
 }
 
-contract SellLooksrare {
+contract SellSudoswap {
     /// @dev Contract owner
     address internal immutable OWNER;
     /// @dev Sudoswap contract
@@ -49,18 +49,16 @@ contract SellLooksrare {
     /// @notice Creates a new instant sell contract
     /// @param _NFT address of NFT
     /// @param _LSSVM address of sudoswap amm
-    /// @param _TRANSFER_MANAGER address of sudoswap transfer manager
     constructor(
         address _NFT,
-        address _LSSVM,
-        address _TRANSFER_MANAGER
+        address _LSSVM
     ) {
         // Setup contract owner
         OWNER = msg.sender;
         // Setup Sudoswap contract (0x2B2e8cDA09bBA9660dCA5cB6233787738Ad68329)
         LSSVM = ILSSVMRouter(_LSSVM);
         // Give Sudoswap approval to execuate sell (0x2B2e8cDA09bBA9660dCA5cB6233787738Ad68329)
-        IERC721(_NFT).setApprovalForAll(_TRANSFER_MANAGER, true);
+        IERC721(_NFT).setApprovalForAll(_LSSVM, true);
     }
 
     function executeBuy(bytes memory data, address ethRecipient, address nftRecipient, uint256 deadline) external {
