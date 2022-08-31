@@ -19,8 +19,8 @@ contract SellSudoswapTest is Test {
         );
     }
 
-    /// @notice Test instant sell on sudoswap
-    function testInstantSell() public {
+    /// @notice Test buy sepcific nft on sudoswap
+    function testBuySpecific() public {
         // Enforce contract starts with 0 balance
         vm.deal(address(SUDOSWAP), 0);
 
@@ -35,6 +35,23 @@ contract SellSudoswapTest is Test {
         address nftRecipient = address(this);
         uint256 deadline = 1681127064;
 
-        SUDOSWAP.executeBuy(abi.encode(data), ethRecipient, nftRecipient, deadline);
+        SUDOSWAP.executeBuySpecific(abi.encode(data), ethRecipient, nftRecipient, deadline);
+    }
+
+    /// @notice Test buy any nft on sudoswap
+    function testBuyAny() public {
+        // Enforce contract starts with 0 balance
+        vm.deal(address(SUDOSWAP), 0);
+
+        PairSwapAny memory data = PairSwapAny({
+            pair: address(0x5d3B33Bf20c2C5A5758b4bd5D19bab8bb535583F),
+            numItems: 1
+        });
+
+        address ethRecipient = address(this);
+        address nftRecipient = address(this);
+        uint256 deadline = 1681127064;
+
+        SUDOSWAP.executeBuyAny(abi.encode(data), ethRecipient, nftRecipient, deadline);
     }
 }

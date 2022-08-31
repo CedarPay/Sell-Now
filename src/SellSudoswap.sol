@@ -7,6 +7,11 @@ struct PairSwapSpecific {
     uint256[] nftIds;
 }
 
+struct PairSwapAny {
+    address pair;
+    uint256 numItems;
+}
+
 /// ============ Interfaces ============
 // ERC721
 interface IERC721 {
@@ -22,10 +27,17 @@ interface IERC721 {
 }
 
 // Sudoswap, source: https://github.com/sudoswap/lssvm/blob/9e8ee80f60682b8f3f73163f1870ff28f7e07668/src/LSSVMRouter.sol
-interface ILSSVMRouter {
+interface IRouter {
     /// @notice Buy NFT on sudoswap
     function swapETHForSpecificNFTs(
         PairSwapSpecific[] calldata swapList,
+        address payable ethRecipient,
+        address nftRecipient,
+        uint256 deadline
+    ) external payable;
+
+    function swapETHForAnyNFTs(
+        PairSwapAny[] calldata swapList,
         address payable ethRecipient,
         address nftRecipient,
         uint256 deadline
@@ -40,46 +52,100 @@ interface ILSSVMRouter {
     ) external;
 }
 
+interface IPair {
+    /// @notice Buy NFT on sudoswap
+    function swapTokenForSpecificNFTs(
+        uint256[] calldata nftIds,
+        uint256 maxExpectedTokenInput,
+        address nftRecipient,
+        bool isRouter,
+        address routerCaller
+    ) external payable returns (uint256 inputAmount);
+
+    function swapTokenForAnyNFTs(
+        uint256 numNFTs,
+        uint256 maxExpectedTokenInput,
+        address nftRecipient,
+        bool isRouter,
+        address routerCaller
+    ) external payable;
+
+    /// @notice Sell NFT on sudoswap
+    function swapNFTsForToken(
+        uint256[] calldata nftIds,
+        uint256 minExpectedTokenOutput,
+        address payable tokenRecipient,
+        bool isRouter,
+        address routerCaller
+    ) external returns (uint256 outputAmount);
+}
+
 contract SellSudoswap {
     /// @dev Contract owner
     address internal immutable OWNER;
     /// @dev Sudoswap contract
-    ILSSVMRouter internal immutable LSSVM;
+    IRouter internal immutable LSSVM;
 
     /// @notice Creates a new instant sell contract
     /// @param _NFT address of NFT
     /// @param _LSSVM address of sudoswap amm
-    constructor(
-        address _NFT,
-        address _LSSVM
-    ) {
+    constructor(address _NFT, address _LSSVM) {
         // Setup contract owner
         OWNER = msg.sender;
         // Setup Sudoswap contract (0x2B2e8cDA09bBA9660dCA5cB6233787738Ad68329)
-        LSSVM = ILSSVMRouter(_LSSVM);
+        LSSVM = IRouter(_LSSVM);
         // Give Sudoswap approval to execuate sell (0x2B2e8cDA09bBA9660dCA5cB6233787738Ad68329)
         IERC721(_NFT).setApprovalForAll(_LSSVM, true);
     }
 
-    function executeBuy(bytes memory data, address ethRecipient, address nftRecipient, uint256 deadline) external {
+    function executeBuySpecific(
+        bytes memory data,
+        address ethRecipient,
+        address nftRecipient,
+        uint256 deadline
+    ) external {
         // Decode variables passed in data
-        PairSwapSpecific memory swap = abi.decode(
-            data,
-            (PairSwapSpecific)
-        );
+        PairSwapSpecific memory swap = abi.decode(data, (PairSwapSpecific));
         PairSwapSpecific[] memory swapList = new PairSwapSpecific[](1);
         swapList[0] = swap;
 
         // buy NFT via Swap NFT
-        LSSVM.swapETHForSpecificNFTs(swapList, payable(ethRecipient), nftRecipient, deadline);
+        LSSVM.swapETHForSpecificNFTs(
+            swapList,
+            payable(ethRecipient),
+            nftRecipient,
+            deadline
+        );
     }
 
-    function executeSell(bytes memory data, uint256 minOutput, address tokenRecipient, uint256 deadline) external {
+    function executeBuyAny(
+        bytes memory data,
+        address ethRecipient,
+        address nftRecipient,
+        uint256 deadline
+    ) external {
         // Decode variables passed in data
-        PairSwapSpecific memory swap = abi.decode(
-            data,
-            (PairSwapSpecific)
+        PairSwapAny memory swap = abi.decode(data, (PairSwapAny));
+        PairSwapAny[] memory swapList = new PairSwapAny[](1);
+        swapList[0] = swap;
+
+        // buy NFT via Swap NFT
+        LSSVM.swapETHForAnyNFTs(
+            swapList,
+            payable(ethRecipient),
+            nftRecipient,
+            deadline
         );
+    }
+
+    function executeSell(
+        bytes memory data,
+        uint256 minOutput,
+        address tokenRecipient,
+        uint256 deadline
+    ) external {
+        // Decode variables passed in data
+        PairSwapSpecific memory swap = abi.decode(data, (PairSwapSpecific));
         PairSwapSpecific[] memory swapList = new PairSwapSpecific[](1);
         swapList[0] = swap;
 

@@ -45,6 +45,8 @@ contract GenericMarketplaceTest is BaseOrderTest {
 
     function Market(BaseMarketConfig config) public {
         beforeAllPrepareMarketplaceTest(config);
+        BuyOfferedERC721WithEther_ListOnChain(config);
+        BuyOfferedERC721WithEther(config);
         BuyOfferedERC20WithERC721_ListOnChain(config);
         BuyOfferedERC20WithERC721(config);
     }
@@ -71,6 +73,74 @@ contract GenericMarketplaceTest is BaseOrderTest {
                         Tests
     //////////////////////////////////////////////////////////////*/
  
+    /// @dev Buy ERC721 in ERC20
+    function BuyOfferedERC721WithEther_ListOnChain(
+        BaseMarketConfig config
+    ) internal prepareTest(config) {
+        string memory testLabel = "(ERC721 -> ETH List-On-Chain)";
+        test721_1.mint(alice, 1);
+        try
+            config.getPayload_BuyOfferedERC721WithEther(
+                TestOrderContext(true, alice, bob),
+                TestItem721(address(test721_1), 1),
+                100
+            )
+        returns (TestOrderPayload memory payload) {
+            _CallWithParams(
+                config.name(),
+                string(abi.encodePacked(testLabel, " List")),
+                alice,
+                payload.submitOrder
+            );
+
+            // Allow the market to escrow after listing
+            assert(
+                test721_1.ownerOf(1) == alice ||
+                    test721_1.ownerOf(1) == config.market()
+            );
+
+            _CallWithParams(
+                config.name(),
+                string(abi.encodePacked(testLabel, " Fulfill")),
+                bob,
+                payload.executeOrder
+            );
+
+            assertEq(test721_1.ownerOf(1), bob);
+        } catch {
+            _logNotSupported(config.name(), testLabel);
+        }
+    }
+
+    /// @dev Buy ERC721 in ERC20
+    function BuyOfferedERC721WithEther(BaseMarketConfig config)
+        internal
+        prepareTest(config)
+    {
+        string memory testLabel = "(ERC721 -> ETH)";
+        test721_1.mint(alice, 1);
+        try
+            config.getPayload_BuyOfferedERC721WithEther(
+                TestOrderContext(false, alice, bob),
+                TestItem721(address(test721_1), 1),
+                100
+            )
+        returns (TestOrderPayload memory payload) {
+            assertEq(test721_1.ownerOf(1), alice);
+
+            _CallWithParams(
+                config.name(),
+                string(abi.encodePacked(testLabel, " Fulfill, w/ Sig")),
+                bob,
+                payload.executeOrder
+            );
+
+            assertEq(test721_1.ownerOf(1), bob);
+        } catch {
+            _logNotSupported(config.name(), testLabel);
+        }
+    }
+
     /// @dev Sell ERC721 in ERC20
     function BuyOfferedERC20WithERC721_ListOnChain(
         BaseMarketConfig config
