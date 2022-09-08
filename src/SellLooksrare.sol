@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.13;
+import "@openzeppelin/contracts/token/ERC721/IERC721Receiver.sol";
 
 // LooksRare order types, source: https://github.com/LooksRare/contracts-exchange-v1/blob/59ccb75c939c1dcafebda8cecedbda442131f0af/contracts/libraries/OrderTypes.sol
 library OrderTypes {
@@ -81,7 +82,7 @@ interface ILooksRareExchange {
     ) external payable;
 }
 
-contract SellLooksrare {
+contract SellLooksrare  is IERC721Receiver {
     /// @dev Wrapped Ether contract
     IWETH internal immutable WETH;
     /// @dev Contract owner
@@ -110,6 +111,15 @@ contract SellLooksrare {
         IERC721(_NFT).setApprovalForAll(_TRANSFER_MANAGER, true);
     }
 
+   function onERC721Received(
+        address,
+        address,
+        uint256,
+        bytes calldata
+    ) external pure override returns (bytes4) {
+        return this.onERC721Received.selector;
+    }
+    
     function executeBuy(bytes memory data) external {
         // Decode variables passed in data
         OrderTypes.MakerOrder memory purchaseAsk = abi.decode(
@@ -128,7 +138,7 @@ contract SellLooksrare {
         });
 
         // Accept maker ask order and purchase MAYC
-        LOOKSRARE.matchAskWithTakerBidUsingETHAndWETH(purchaseBid, purchaseAsk);
+        LOOKSRARE.matchAskWithTakerBidUsingETHAndWETH{value:purchaseAsk.price}(purchaseBid, purchaseAsk);
     }
 
     function executeSell(bytes memory data) external {
