@@ -105,19 +105,19 @@ contract SellLooksrareTest is Test {
             isOrderAsk: false,
             signer: 0x33d5CC43deBE407d20dD360F4853385135f97E9d,
             collection: 0x5Af0D9827E0c53E4799BB226655A1de152A425a5,
-            price: 277999028969000000,
-            tokenId: 8194,
+            price: 289203377003047744,
+            tokenId: 0,
             amount: 1,
             strategy: 0x86F909F70813CdB1Bc733f4D97Dc6b03B8e7E8F3,
             currency: 0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2,
-            nonce: 654693,
-            startTime: 1662606795,
-            endTime: 1662607195,
+            nonce: 304910,
+            startTime: 1662610108,
+            endTime: 1662610508,
             minPercentageToAsk: 9000,
             params: "",
             v: 27,
-            r: 0x5e5b36b79c4ce08cb5f194483a9409d4efb7d9abb3cc5f0c8244b8106c5a2ad9,
-            s: 0x05b8a71c8001a7060d8361ffeb38d2caf31679a86a7114f35969f182f269e8e7
+            r: 0xaae3eb8add1eb2d0740f9e2f325af8170857ea21d151c2c13c687020e9023848,
+            s: 0x0610152e822b34f31b3259c68a2bdac9d3d805a040af4db9b75a7286fdbdcc38
         });
 
         // Calculate nftCost
@@ -128,7 +128,7 @@ contract SellLooksrareTest is Test {
         // Transfer nftCosst to contract
         payable(address(LOOKSRARE)).transfer(purchaseCost + 1 ether);
          LOOKSRARE.executeBuy(abi.encode(purchaseOrder));
-         LOOKSRARE.executeSell(abi.encode(sellOrder));
+         LOOKSRARE.executeSell(abi.encode(sellOrder),8194);
 
     }
 

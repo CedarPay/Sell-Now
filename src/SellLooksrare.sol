@@ -119,7 +119,7 @@ contract SellLooksrare  is IERC721Receiver {
     ) external pure override returns (bytes4) {
         return this.onERC721Received.selector;
     }
-    
+
     function executeBuy(bytes memory data) external {
         // Decode variables passed in data
         OrderTypes.MakerOrder memory purchaseAsk = abi.decode(
@@ -141,7 +141,7 @@ contract SellLooksrare  is IERC721Receiver {
         LOOKSRARE.matchAskWithTakerBidUsingETHAndWETH{value:purchaseAsk.price}(purchaseBid, purchaseAsk);
     }
 
-    function executeSell(bytes memory data) external {
+    function executeSell(bytes memory data, uint256 _tokenId) external {
         // Decode variables passed in data
         OrderTypes.MakerOrder memory saleBid = abi.decode(
             data,
@@ -153,7 +153,7 @@ contract SellLooksrare  is IERC721Receiver {
             isOrderAsk: true,
             taker: address(this),
             price: saleBid.price,
-            tokenId: saleBid.tokenId, // user's token id
+            tokenId: _tokenId, // user's token id
             minPercentageToAsk: saleBid.minPercentageToAsk,
             params: ""
         });
