@@ -74,7 +74,7 @@ contract SellLooksrareTest is Test {
     }
 
     /// @notice Test instant sell on looksrare
-    function testInstantSell() public {
+    function testLooksrareSell() public {
         // Enforce contract starts with 0 balance
         vm.deal(address(LOOKSRARE), 0);
 
@@ -82,42 +82,42 @@ contract SellLooksrareTest is Test {
         // Details from LooksRare API (https://looksrare.github.io/api-docs/#/Orders/OrderController.getOrders)
         OrderTypes.MakerOrder memory purchaseOrder = OrderTypes.MakerOrder({
             isOrderAsk: true,
-            signer: 0x2c087A1c1CaB13bCbC8eB7914909a9B3Bff7Fa7f,
+            signer: 0x55313b424dE97716c9dfc7f6F97dCaAb0234274D,
             collection: 0x5Af0D9827E0c53E4799BB226655A1de152A425a5,
-            price: 44900000000000000000,
-            tokenId: 3215,
+            price: 350000000000000000,
+            tokenId: 8194,
             amount: 1,
             strategy: 0x56244Bb70CbD3EA9Dc8007399F61dFC065190031,
             currency: 0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2,
-            nonce: 353,
-            startTime: 1661098303,
-            endTime: 1661703086,
-            minPercentageToAsk: 8500,
+            nonce: 1,
+            startTime: 1662574436,
+            endTime: 1665166436,
+            minPercentageToAsk: 7500,
             params: "",
-            v: 27,
-            r: 0x428b993e6b44e127fd99093979e325a0e4d8a69f6100bedd7d71df944f4b99cd,
-            s: 0x1582ac40302ff465d6bc24e078bf19e2c786d37e8e8bc924c5d88e8859874496
+            v: 28,
+            r: 0xa006e0d832c2aff6416cbd3d063c656b3f4a90248ec11ae96bfab672b59f1ba0,
+            s: 0x174ed06fe2905615fc417f744fb43a957e5e4ef38d4ef62c82e37275b707ce8d
         });
 
         // Setup sale order
         // Details from LooksRare API (https://looksrare.github.io/api-docs/#/Orders/OrderController.getOrders)
         OrderTypes.MakerOrder memory sellOrder = OrderTypes.MakerOrder({
             isOrderAsk: false,
-            signer: 0x562607a01a12E84a4aBE025Ac14ab1E36b76519f,
+            signer: 0x33d5CC43deBE407d20dD360F4853385135f97E9d,
             collection: 0x5Af0D9827E0c53E4799BB226655A1de152A425a5,
-            price: 330329999999999936,
-            tokenId: 3215,
+            price: 277999028969000000,
+            tokenId: 8194,
             amount: 1,
             strategy: 0x86F909F70813CdB1Bc733f4D97Dc6b03B8e7E8F3,
             currency: 0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2,
-            nonce: 575787,
-            startTime: 1661289134,
-            endTime: 1661289434,
-            minPercentageToAsk: 8500,
+            nonce: 654693,
+            startTime: 1662606795,
+            endTime: 1662607195,
+            minPercentageToAsk: 9000,
             params: "",
-            v: 28,
-            r: 0x3acce2ed14c02f93e6cf113d44da30f8a1edde68cb073a0a3256f3fa024b65ef,
-            s: 0x3c91793eb47ce7283c4e12e56dd3cf54c87529ec6616d10d459732ac8fdef7da
+            v: 27,
+            r: 0x5e5b36b79c4ce08cb5f194483a9409d4efb7d9abb3cc5f0c8244b8106c5a2ad9,
+            s: 0x05b8a71c8001a7060d8361ffeb38d2caf31679a86a7114f35969f182f269e8e7
         });
 
         // Calculate nftCost
@@ -127,12 +127,8 @@ contract SellLooksrareTest is Test {
         uint256 purchaseCost = purchaseOrder.price;
         // Transfer nftCosst to contract
         payable(address(LOOKSRARE)).transfer(purchaseCost + 1 ether);
-        WETH.deposit{value: 10 ether}();
-        WETH.transferFrom(address(this), address(LOOKSRARE), 5 ether);
-        // assertEq(address(this).balance, balanceBefore - purchaseCost - 1 ether);
-        // assertEq(address(LOOKSRARE).balance, LOOKSRAREBefore + purchaseCost + 1 ether);
-        LOOKSRARE.executeBuy(abi.encode(purchaseOrder));
-        // LOOKSRARE.executeSell(abi.encode(sellOrder));
+         LOOKSRARE.executeBuy(abi.encode(purchaseOrder));
+         LOOKSRARE.executeSell(abi.encode(sellOrder));
 
     }
 
