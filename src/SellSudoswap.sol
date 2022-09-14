@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.13;
-
+import "@openzeppelin/contracts/token/ERC721/IERC721Receiver.sol";
 /// ============ Structs ============
 struct PairSwapSpecific {
     address pair;
@@ -80,7 +80,7 @@ interface IPair {
     ) external returns (uint256 outputAmount);
 }
 
-contract SellSudoswap {
+contract SellSudoswap is IERC721Receiver{
     /// @dev Contract owner
     address internal immutable OWNER;
     /// @dev Sudoswap contract
@@ -98,11 +98,20 @@ contract SellSudoswap {
         IERC721(_NFT).setApprovalForAll(_LSSVM, true);
     }
 
+    function onERC721Received(
+        address,
+        address,
+        uint256,
+        bytes calldata
+    ) external pure override returns (bytes4) {
+        return this.onERC721Received.selector;
+    }
     function executeBuySpecific(
         bytes memory data,
         address ethRecipient,
         address nftRecipient,
-        uint256 deadline
+        uint256 deadline,
+        uint256 payAmount
     ) external {
         // Decode variables passed in data
         PairSwapSpecific memory swap = abi.decode(data, (PairSwapSpecific));
@@ -122,7 +131,8 @@ contract SellSudoswap {
         bytes memory data,
         address ethRecipient,
         address nftRecipient,
-        uint256 deadline
+        uint256 deadline,
+        uint256 payAmount
     ) external {
         // Decode variables passed in data
         PairSwapAny memory swap = abi.decode(data, (PairSwapAny));
@@ -130,7 +140,7 @@ contract SellSudoswap {
         swapList[0] = swap;
 
         // buy NFT via Swap NFT
-        LSSVM.swapETHForAnyNFTs(
+        LSSVM.swapETHForAnyNFTs{value:payAmount}(
             swapList,
             payable(ethRecipient),
             nftRecipient,
