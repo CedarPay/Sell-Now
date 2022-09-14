@@ -119,7 +119,7 @@ contract SellSudoswap is IERC721Receiver{
         swapList[0] = swap;
 
         // buy NFT via Swap NFT
-        LSSVM.swapETHForSpecificNFTs(
+        LSSVM.swapETHForSpecificNFTs{value:payAmount}(
             swapList,
             payable(ethRecipient),
             nftRecipient,
